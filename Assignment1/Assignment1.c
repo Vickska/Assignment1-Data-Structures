@@ -24,8 +24,37 @@ struct FlightNode {
 	struct FlightNode *prev;
 };
 
-int main(void) {
+struct FlightNode* createFlightNode(struct FlightInfo flightInfo);
+struct FlightInfo getFlightInfo();
+struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct FlightNode* newNode);
+struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode);
 
+int main(void) {
+	struct FlightNode* fareHead = NULL;
+	struct FlightNode* destHead = NULL;
+	
+	while (1) {
+		
+		// Getting flight information from the user
+		struct FlightInfo flightInfo = getFlightInfo();
+
+		// Stop getting input if the user enters an invalid destination or date
+		if (flightInfo.destination == NULL || flightInfo.date == NULL) {
+			break;
+		}
+
+		// Creating new FlightNodes with the user input
+		struct FlightNode* fareNode = createFlightNode(flightInfo);
+		struct FlightNode* destNode = createFlightNode(flightInfo);
+
+		// Inserting the new node into the sorted list based on fare
+		fareHead = insertSortedFare(fareHead, fareNode);
+
+		// Inserting the new node into the sorted list based on destination
+		destHead = insertSortedDest(destHead, destNode);
+
+	}
+	
 
 	return 0;
 }
@@ -127,6 +156,9 @@ struct FlightInfo getFlightInfo() {
 	// Asking the user for the FARE
 	printf("Enter flight fare: \n");
 	scanf("%f", &inputInfo.flightFare);
+
+	// Clear the newline character 
+	getchar(); 
 
 	return inputInfo;
 
