@@ -10,7 +10,10 @@ DESCRIPTION:  This program ...
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+
+// Creating a struct to hold the flight information, including destination, date, and fare.
 struct FlightInfo {
 	char *destination;
 	char *date;
@@ -18,6 +21,7 @@ struct FlightInfo {
 
 };
 
+// Creating a struct to hold the flight information and pointers to the next and previous flights in the list.
 struct FlightNode {
 	struct FlightInfo info;
 	struct FlightNode *next;
@@ -28,6 +32,7 @@ struct FlightNode* createFlightNode(struct FlightInfo flightInfo);
 struct FlightInfo getFlightInfo();
 struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct FlightNode* newNode);
 struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode);
+void PrintList(struct FlightNode* head);
 
 int main(void) {
 	struct FlightNode* fareHead = NULL;
@@ -55,10 +60,27 @@ int main(void) {
 
 	}
 	
+	// Traversing the fare-sorted and destination-sorted lists and printing the flight information
+	PrintList(fareHead);
+	PrintList(destHead);
 
 	return 0;
 }
 
+// METHOD : PrintList()
+// DESCRIPTION: 
+//      This function traverses a list based on the head pointer and prints the flight information.
+// PARAMETERS:
+//     struct FlightNode* head: A pointer to the head of the list
+// RETURNS:
+//		None.
+void PrintList(struct FlightNode* head) {
+	struct FlightNode* current = head;
+	while (current != NULL) {
+		printf("%-15s %-10s %-.2f\n", current->info.destination, current->info.date, current->info.flightFare);
+		current = current->next;
+	}
+}
 // METHOD : createFlightNode()
 // DESCRIPTION: 
 //      This function creates a new FlightNode struct, using info from a FlightInfo struct.
@@ -116,7 +138,7 @@ struct FlightInfo getFlightInfo() {
 	inputInfo.destination = malloc(strlen(buffer) + 1);
 	if (inputInfo.destination == NULL) {
 		printf("Memory allocation failed.\n");
-		return;
+		return inputInfo;
 	}
 
 	// Storing the destination input
@@ -145,7 +167,7 @@ struct FlightInfo getFlightInfo() {
 	inputInfo.date = malloc(strlen(buffer) + 1);
 	if (inputInfo.date == NULL) {
 		printf("Memory allocation failed.\n");
-		return;
+		return inputInfo;
 	}
 
 	// Storing the date input
