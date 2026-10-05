@@ -155,11 +155,60 @@ struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct Flight
 	}
 	else
 	{
-		// If the new node's fare is larger or equal to the head's fare, the list is traverse 
+		// If the new node's fare is larger or equal to the head's fare, the list is traversed
 		// to find the appropriate position
 		struct FlightNode* current = sortedHead;
 
 		while (current->next != NULL && current->next->info.flightFare <= newNode->info.flightFare) {
+			current = current->next;
+		}
+
+		// Inserting the new node
+		newNode->next = current->next;
+		newNode->prev = current;
+
+		// If the new node was not inserted at the end, the pointer of the next node is updated to point back to the new node
+		if (current->next != NULL) {
+			current->next->prev = newNode;
+		}
+
+		// Updating the current node's next pointer to point to the new node
+		current->next = newNode;
+	}
+
+	return sortedHead;
+}
+
+
+// METHOD : insertSortedDest()
+// DESCRIPTION: 
+//      This function inserts a new FlightNode into a sorted doubly linked list based on the flight destination.
+// PARAMETERS:
+//     struct FlightNode* sortedHead: A pointer to the head of the list
+//     struct FlightNode* newNode: A pointer to the new node to be inserted
+// RETURNS:
+//		struct FlightNode* sortedHead: A pointer to the head of the sorted list after insertion
+struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode) {
+
+	// If the sorted list is empty, the new node becomes the head
+	if (sortedHead == NULL) {
+		return newNode;
+	}
+
+
+	// if the new node's destination is alphabetically lower than the head's destination, it is inserted at the beginning
+	if(strcmp(newNode->info.destination, sortedHead->info.destination) < 0) {
+		newNode->next = sortedHead;
+		sortedHead->prev = newNode;
+		return newNode;
+	}
+	else
+	{
+		// If the new node's destination is alphabetically higher or equal to the head's destination,
+		// the list is traversed to find the appropriate position
+		struct FlightNode* current = sortedHead;
+
+		while (current->next != NULL && strcmp(current->next->info.destination, newNode->info.destination) <= 0) {
 			current = current->next;
 		}
 
