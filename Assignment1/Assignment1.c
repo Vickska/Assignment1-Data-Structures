@@ -32,6 +32,8 @@ struct FlightNode* createFlightNode(struct FlightInfo flightInfo);
 struct FlightInfo getFlightInfo();
 struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct FlightNode* newNode);
 struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode);
+struct FlightInfo getDestAndDate();
+struct FlightNode* findFlight(struct FlightNode* head, char* destination, char* date);
 void PrintList(struct FlightNode* head);
 
 int main(void) {
@@ -63,6 +65,9 @@ int main(void) {
 	// Traversing the fare-sorted and destination-sorted lists and printing the flight information
 	PrintList(fareHead);
 	PrintList(destHead);
+
+	struct FlightInfo findInfo = getDestAndDate();
+	struct FlightNode* foundFlight = findFlight(destHead, findInfo.destination, findInfo.date);
 
 	return 0;
 }
@@ -281,3 +286,118 @@ struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct Flight
 
 	return sortedHead;
 }
+
+// METHOD : getDestAndDate()
+// DESCRIPTION: 
+//      This function traverses asks the user for input only for flight destination and date, returning a flight info struct
+//		with the information.
+// PARAMETERS:
+//     None.
+// RETURNS:
+//     struct FlightInfo inputInfo: A struct containing the user input for destination and date.
+struct FlightInfo getDestAndDate() {
+	struct FlightInfo inputInfo;
+
+	// Creating buffer to receive input
+	char buffer[100];
+
+	// Asking the user for the DESTINATION
+	printf("Enter flight destination: \n");
+	fgets(buffer, sizeof(buffer), stdin);
+
+	// Removing the newline character from the input
+	buffer[strcspn(buffer, "\n")] = '\0';
+
+	// Stop getting input if the user enters an invalid destination
+	if (strcmp(buffer, ".") == 0) {
+		inputInfo.destination = NULL;
+		return inputInfo;
+	}
+
+	// Ensuring the string is 15 characters long
+	buffer[14] = '\0';
+
+	// Allocating memory for the destination string
+	inputInfo.destination = malloc(strlen(buffer) + 1);
+	if (inputInfo.destination == NULL) {
+		printf("Memory allocation failed.\n");
+		inputInfo.destination = NULL;
+		inputInfo.date = NULL;
+		return inputInfo;
+	}
+
+	// Storing the destination input
+	strcpy(inputInfo.destination, buffer);
+
+
+
+
+	// Asking the user for the DATE
+	printf("Enter flight date (DDMMYYYY): \n");
+	fgets(buffer, sizeof(buffer), stdin);
+
+	// Removing the newline character from the input
+	buffer[strcspn(buffer, "\n")] = '\0';
+
+	// Stop getting input if the user enters an invalid date
+	if (strcmp(buffer, ".") == 0) {
+		inputInfo.date = NULL;
+		return inputInfo;
+	}
+
+	// Ensuring the string is 9 characters long
+	buffer[8] = '\0';
+
+	// Allocating memory for the date string
+	inputInfo.date = malloc(strlen(buffer) + 1);
+	if (inputInfo.date == NULL) {
+		printf("Memory allocation failed.\n");
+		inputInfo.destination = NULL;
+		inputInfo.date = NULL;
+		return inputInfo;
+	}
+
+	// Storing the date input
+	strcpy(inputInfo.date, buffer);
+
+	//Setting flight fare to 0 as it is not necessary for this function
+	inputInfo.flightFare = 0.0;
+
+	return inputInfo;
+
+
+}
+
+// METHOD : findFlight()
+// DESCRIPTION: 
+//      This function traverses a list based on the head pointer and returns a pointer to the FlightNode with 
+//      the matching destination and date. If no match is found, NULL will be returned.
+// PARAMETERS:
+//     struct FlightNode* head: A pointer to the head of the list
+//	   char *destination:  A string containing the destination to be searched for
+//     char *date: A string containing the date to be searched for
+// RETURNS:
+// 	struct FlightNode* : A pointer to the FlightNode with the matching destination and date, or NULL if no match is found.
+struct FlightNode* findFlight(struct FlightNode* head, char *destination, char *date) {
+
+	// Traversing the list to find a flight with the specified destination and date
+	struct FlightNode* current = head;
+	while (current != NULL) {
+
+		// If the destination and date match, the current node is returned
+		if (strcmp(current->info.destination, destination) == 0 && strcmp(current->info.date, date) == 0) {
+			return current;
+		}
+		// Otherwise the loop continues to the next node in the list
+		else { 
+			current = current->next; 
+		}
+		
+	}
+
+	Printf("Flight not found.\n");
+	// If a match can't be found, NULL is returned.
+	return NULL;
+	
+}
+
