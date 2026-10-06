@@ -40,6 +40,9 @@ void PrintList(struct FlightNode* head);
 int main(void) {
 	struct FlightNode* fareHead = NULL;
 	struct FlightNode* destHead = NULL;
+
+	struct FlightNode* fareTail = NULL;
+	struct FlightNode* destTail = NULL;
 	
 	while (1) {
 		
@@ -67,9 +70,39 @@ int main(void) {
 	PrintList(fareHead);
 	PrintList(destHead);
 
+	// Using getDestAndDate() to get a destination and date from the user
 	struct FlightInfo findInfo = getDestAndDate();
-	struct FlightNode* foundFlight = findFlight(destHead, findInfo.destination, findInfo.date);
 
+	// Finding the flight in both lists based on user input
+	struct FlightNode* destFoundFlight = findFlight(destHead, findInfo.destination, findInfo.date);
+	struct FlightNode* fareFoundFlight = findFlight(fareHead, findInfo.destination, findInfo.date);
+
+	// Prompting the user to edit the fare of the found flight
+	float updatedFare = editFare(destFoundFlight);
+
+	// If the fare is unchanged, the user is informed and the function is returned without doing anything.
+	if (updatedFare == destFoundFlight->info.flightFare) {
+		printf("New fare is the same as the existing fare. No changes made.");
+		return;
+	}
+	// If the fare is changed, the current flightNode is deleted, and a new node is created and inserted into the fare-sorted linked list
+	else {
+
+		// Updating the fare in the destination-sorted list
+		destFoundFlight->info.flightFare = updatedFare;
+
+		//Updating the fare in the fare-sorted list
+		fareFoundFlight->info.flightFare = updatedFare;
+
+		deleteNode(fareFoundFlight, &fareHead, &fareTail);
+
+		fareHead = insertSortedFare(fareHead, fareFoundFlight);
+		printf("Flight fare updated.\n");
+	}
+
+	// Traversing the fare-sorted and destination-sorted lists and printing the flight information
+	PrintList(fareHead);
+	PrintList(destHead);
 	return 0;
 }
 
@@ -402,34 +435,29 @@ struct FlightNode* findFlight(struct FlightNode* head, char *destination, char *
 	
 }
 
-void editFare(struct FlightNode* flightNode) {
-
-	// Storing current flightNode information
-	float currentFare = flightNode->info.flightFare;
-	char *currentDestination = flightNode->info.destination;
-	char *currentDate = flightNode->info.date;
+// METHOD : editFare()
+// DESCRIPTION: 
+//      This function allows the user to edit the fare of a specific flight.
+// PARAMETERS:
+//     struct FlightNode* flightNode: A pointer to the flight node whose fare is to be edited
+// RETURNS:
+// 	   float newFare: The updated fare of the flight.
+float editFare(struct FlightNode* flightNode) {
 
 	// Printing the fare of the flight before editing
 	printf("%-.2f\n", flightNode->info.flightFare);
+
 	// Asking the user for the FARE
 	printf("Enter new flight fare: \n");
 
 	float newFare;
 	scanf("%f", &newFare);
 
-	// If the fare is unchanged, the user is informed and the function is returned without doing anything.
-	if (newFare == flightNode->info.flightFare) {
-		printf("New fare is the same as the exsting fare. No changes made.");
-		return;
-	}
-	// If the fare is changed, the current flightNode is deleted, and a new node is created and inserted into the fare-sorted linked list
-	else {
-		flightNode->info.flightFare = newFare;
-		printf("Flight");
-	}
-
 	// Clear the newline character 
 	getchar();
+
+	return newFare;
+	
 }
 
 
