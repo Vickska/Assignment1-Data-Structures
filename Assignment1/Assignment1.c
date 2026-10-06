@@ -34,6 +34,7 @@ struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct Flight
 struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode);
 struct FlightInfo getDestAndDate();
 struct FlightNode* findFlight(struct FlightNode* head, char* destination, char* date);
+void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail);
 void PrintList(struct FlightNode* head);
 
 int main(void) {
@@ -401,3 +402,77 @@ struct FlightNode* findFlight(struct FlightNode* head, char *destination, char *
 	
 }
 
+void editFare(struct FlightNode* flightNode) {
+
+	// Storing current flightNode information
+	float currentFare = flightNode->info.flightFare;
+	char *currentDestination = flightNode->info.destination;
+	char *currentDate = flightNode->info.date;
+
+	// Printing the fare of the flight before editing
+	printf("%-.2f\n", flightNode->info.flightFare);
+	// Asking the user for the FARE
+	printf("Enter new flight fare: \n");
+
+	float newFare;
+	scanf("%f", &newFare);
+
+	// If the fare is unchanged, the user is informed and the function is returned without doing anything.
+	if (newFare == flightNode->info.flightFare) {
+		printf("New fare is the same as the exsting fare. No changes made.");
+		return;
+	}
+	// If the fare is changed, the current flightNode is deleted, and a new node is created and inserted into the fare-sorted linked list
+	else {
+		flightNode->info.flightFare = newFare;
+		printf("Flight");
+	}
+
+	// Clear the newline character 
+	getchar();
+}
+
+
+// METHOD : deleteNode()
+// DESCRIPTION: 
+//      This function deletes the input FlightNode from the linked list
+// PARAMETERS:
+//     struct FlightNode* node: A pointer to the node to be deleted
+//	   struct FlightNode** head: A pointer to the head of the list
+//     struct FlightNode** tail: A pointer to the tail of the list
+// RETURNS:
+//		None.
+void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail) {
+
+	struct FlightNode* current = *head;
+	
+	if (node == NULL) {
+		return;
+	}
+
+	// Deleting the head
+	if (node == *head) {
+		*head = node->next;
+		if (*head != NULL) {
+			(*head)->prev = NULL;
+		}
+	}
+	else {
+		node->prev->next = node->next;
+	}
+	 
+	// Deleting the tail 
+	if (node == *tail) {
+		*tail = node->prev;
+		if (*tail != NULL) {
+			(*tail)->next = NULL;
+		}
+	}
+	else {
+		node->next->prev = node->prev;
+	}
+
+	// Detaching node completely
+	node->next = NULL;
+	node->prev = NULL;
+}
