@@ -11,6 +11,7 @@ DESCRIPTION:  This program ...
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 // Creating a struct to hold the flight information, including destination, date, and fare.
@@ -28,14 +29,17 @@ struct FlightNode {
 	struct FlightNode *prev;
 };
 
+// Function prototypes
 struct FlightNode* createFlightNode(struct FlightInfo flightInfo);
 struct FlightInfo getFlightInfo();
-struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct FlightNode* newNode);
-struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode);
-struct FlightInfo getDestAndDate();
+void insertSortedFare(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** fareTail);
+void insertSortedDest(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** destTail);
+	struct FlightInfo getDestAndDate();
 struct FlightNode* findFlight(struct FlightNode* head, char* destination, char* date);
+float editFare(struct FlightNode* flightNode);
 void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail);
 void PrintList(struct FlightNode* head);
+void freeMemory(struct FlightNode* head);
 
 int main(void) {
 	struct FlightNode* fareHead = NULL;
@@ -57,19 +61,26 @@ int main(void) {
 		// Creating new FlightNodes with the user input
 		struct FlightNode* fareNode = createFlightNode(flightInfo);
 		struct FlightNode* destNode = createFlightNode(flightInfo);
-
+			
 		// Inserting the new node into the sorted list based on fare
-		fareHead = insertSortedFare(fareHead, fareNode);
+		insertSortedFare(&fareHead, fareNode, &fareTail);
 
 		// Inserting the new node into the sorted list based on destination
-		destHead = insertSortedDest(destHead, destNode);
+		insertSortedDest(&destHead, destNode, &destTail);
+
+		printf("\n");
+
 
 	}
 	
 	// Traversing the fare-sorted and destination-sorted lists and printing the flight information
 	PrintList(fareHead);
+	printf("\n");
 	PrintList(destHead);
 
+
+	printf("\n");
+	printf("Enter the destination and date of the flight you want to edit:\n");
 	// Using getDestAndDate() to get a destination and date from the user
 	struct FlightInfo findInfo = getDestAndDate();
 
@@ -77,8 +88,15 @@ int main(void) {
 	struct FlightNode* destFoundFlight = findFlight(destHead, findInfo.destination, findInfo.date);
 	struct FlightNode* fareFoundFlight = findFlight(fareHead, findInfo.destination, findInfo.date);
 
+	if (destFoundFlight == NULL) {
+		return 0;
+	}
+
+	printf("\n");
+
 	// Prompting the user to edit the fare of the found flight
-	float updatedFare = editFare(destFoundFlight);
+	float updatedFare = 0;
+	updatedFare= editFare(destFoundFlight);
 
 	// If the fare is unchanged, the user is informed and the function is returned without doing anything.
 	if (updatedFare == destFoundFlight->info.flightFare) {
@@ -96,13 +114,20 @@ int main(void) {
 
 		deleteNode(fareFoundFlight, &fareHead, &fareTail);
 
-		fareHead = insertSortedFare(fareHead, fareFoundFlight);
+		insertSortedFare(&fareHead, fareFoundFlight, &fareTail);
 		printf("Flight fare updated.\n");
+		printf("\n");
+
 	}
 
 	// Traversing the fare-sorted and destination-sorted lists and printing the flight information
 	PrintList(fareHead);
+	printf("\n");
 	PrintList(destHead);
+
+	// freeing all allocated memory for the linked lists
+	freeMemory(fareHead);
+	freeMemory(destHead);
 	return 0;
 }
 
@@ -115,11 +140,14 @@ int main(void) {
 //		None.
 void PrintList(struct FlightNode* head) {
 	struct FlightNode* current = head;
+
+	// Iterating through the list and printing the flight info for each node
 	while (current != NULL) {
 		printf("%-15s %-10s %-.2f\n", current->info.destination, current->info.date, current->info.flightFare);
 		current = current->next;
 	}
 }
+
 // METHOD : createFlightNode()
 // DESCRIPTION: 
 //      This function creates a new FlightNode struct, using info from a FlightInfo struct.
@@ -129,12 +157,22 @@ void PrintList(struct FlightNode* head) {
 //		struct FlightNode* newNode : A struct containing flight information and pointers to the next and previous flights.
 struct FlightNode* createFlightNode(struct FlightInfo flightInfo) {
 
+	// Allocating memory for the new FlightNode
 	struct FlightNode* newNode = (struct FlightNode*)malloc(sizeof(struct FlightNode));
 	if (newNode == NULL) {
 		printf("Memory allocation failed.\n");
 		return NULL;
 	}
-	newNode->info = flightInfo;
+
+	// Ensuring each node in list has its own unique copy of the flight information, instead of pointing to the same memory location.
+	newNode->info.flightFare = flightInfo.flightFare;
+
+	newNode->info.destination = malloc(strlen(flightInfo.destination) + 1);
+	strcpy(newNode->info.destination, flightInfo.destination);
+
+	newNode->info.date = malloc(strlen(flightInfo.date) + 1);
+	strcpy(newNode->info.date, flightInfo.date);
+
 	newNode->next = NULL;
 	newNode->prev = NULL;
 
@@ -229,28 +267,34 @@ struct FlightInfo getFlightInfo() {
 // DESCRIPTION: 
 //      This function inserts a new FlightNode into a sorted doubly linked list based on the flight fare.
 // PARAMETERS:
-//     struct FlightNode* sortedHead: A pointer to the head of the list
+//     struct FlightNode** sortedHead: A pointer to the head of the list
 //     struct FlightNode* newNode: A pointer to the new node to be inserted
+//	   struct FlightNode** fareTail: A pointer to the tail of the list
 // RETURNS:
-//		struct FlightNode* sortedHead: A pointer to the head of the sorted list after insertion
-struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct FlightNode* newNode) {
+// 	   None.
+void insertSortedFare(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** fareTail) {
 
 	// If the sorted list is empty, the new node becomes the head
-	if (sortedHead == NULL) {
-		return newNode;
+	if (*sortedHead == NULL) {
+
+		// Update the head and tail pointer if the list was empty
+		*sortedHead= newNode;
+		*fareTail = newNode; 
+		return;
 	}
 
 	// if the new node's fare is less than the head's fare, it is inserted at the beginning
-	if (newNode->info.flightFare < sortedHead->info.flightFare) {
-		newNode->next = sortedHead;
-		sortedHead->prev = newNode;
-		return newNode;
+	if (newNode->info.flightFare < (*sortedHead)->info.flightFare) {
+		newNode->next = *sortedHead;
+		(*sortedHead)->prev = newNode;
+		*sortedHead = newNode;
+		return;
 	}
 	else
 	{
 		// If the new node's fare is larger or equal to the head's fare, the list is traversed
 		// to find the appropriate position
-		struct FlightNode* current = sortedHead;
+		struct FlightNode* current = *sortedHead;
 
 		while (current->next != NULL && current->next->info.flightFare <= newNode->info.flightFare) {
 			current = current->next;
@@ -267,9 +311,12 @@ struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct Flight
 
 		// Updating the current node's next pointer to point to the new node
 		current->next = newNode;
-	}
 
-	return sortedHead;
+		// Update the tail pointer if the new node is inserted at the end
+		if (newNode->next == NULL) {
+			*fareTail = newNode; 
+		}
+	}
 }
 
 
@@ -277,29 +324,34 @@ struct FlightNode* insertSortedFare(struct FlightNode* sortedHead, struct Flight
 // DESCRIPTION: 
 //      This function inserts a new FlightNode into a sorted doubly linked list based on the flight destination.
 // PARAMETERS:
-//     struct FlightNode* sortedHead: A pointer to the head of the list
+//     struct FlightNode** sortedHead: A pointer to the head of the list
 //     struct FlightNode* newNode: A pointer to the new node to be inserted
+//	   struct FlightNode** fareTail: A pointer to the tail of the list
 // RETURNS:
-//		struct FlightNode* sortedHead: A pointer to the head of the sorted list after insertion
-struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct FlightNode* newNode) {
+//		None.
+void insertSortedDest(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** destTail) {
 
 	// If the sorted list is empty, the new node becomes the head
-	if (sortedHead == NULL) {
-		return newNode;
+	if (*sortedHead == NULL) {
+		// Update the head and tail pointer if the list was empty
+		*sortedHead = newNode;
+		*destTail = newNode;
+		return;
 	}
 
 
 	// if the new node's destination is alphabetically lower than the head's destination, it is inserted at the beginning
-	if(strcmp(newNode->info.destination, sortedHead->info.destination) < 0) {
-		newNode->next = sortedHead;
-		sortedHead->prev = newNode;
-		return newNode;
+	if(strcmp(newNode->info.destination, (*sortedHead)->info.destination) < 0) {
+		newNode->next = *sortedHead;
+		(*sortedHead)->prev = newNode;
+		*sortedHead = newNode;
+		return;
 	}
 	else
 	{
 		// If the new node's destination is alphabetically higher or equal to the head's destination,
 		// the list is traversed to find the appropriate position
-		struct FlightNode* current = sortedHead;
+		struct FlightNode* current = *sortedHead;
 
 		while (current->next != NULL && strcmp(current->next->info.destination, newNode->info.destination) <= 0) {
 			current = current->next;
@@ -316,9 +368,12 @@ struct FlightNode* insertSortedDest(struct FlightNode* sortedHead, struct Flight
 
 		// Updating the current node's next pointer to point to the new node
 		current->next = newNode;
-	}
 
-	return sortedHead;
+		// Update the tail pointer if the new node is inserted at the end
+		if (newNode->next == NULL) {
+			*destTail = newNode;
+		}
+	}
 }
 
 // METHOD : getDestAndDate()
@@ -429,7 +484,7 @@ struct FlightNode* findFlight(struct FlightNode* head, char *destination, char *
 		
 	}
 
-	Printf("Flight not found.\n");
+	printf("Flight not found.\n");
 	// If a match can't be found, NULL is returned.
 	return NULL;
 	
@@ -460,7 +515,6 @@ float editFare(struct FlightNode* flightNode) {
 	
 }
 
-
 // METHOD : deleteNode()
 // DESCRIPTION: 
 //      This function deletes the input FlightNode from the linked list
@@ -473,34 +527,83 @@ float editFare(struct FlightNode* flightNode) {
 void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail) {
 
 	struct FlightNode* current = *head;
+	bool deleted = false;
+	
+
 	
 	if (node == NULL) {
 		return;
 	}
+	while (deleted != true) {
+		// Deleting the head
+		if (node == *head) {
+			*head = node->next;
+			if (*head != NULL) {
+				(*head)->prev = NULL;
+			}
+			deleted = true;
+			break;
+		}
+		else {
+			node->prev->next = node->next;
+			deleted = true;
+			break;
+		}
 
-	// Deleting the head
-	if (node == *head) {
-		*head = node->next;
-		if (*head != NULL) {
-			(*head)->prev = NULL;
+		// Deleting the tail 
+		if (node == *tail) {
+			*tail = node->prev;
+			if (*tail != NULL) {
+				(*tail)->next = NULL;
+			}
+			deleted = true;
+			break;
 		}
-	}
-	else {
-		node->prev->next = node->next;
-	}
-	 
-	// Deleting the tail 
-	if (node == *tail) {
-		*tail = node->prev;
-		if (*tail != NULL) {
-			(*tail)->next = NULL;
+		else {
+			node->next->prev = node->prev;
+			deleted = true;
+			break;
 		}
-	}
-	else {
-		node->next->prev = node->prev;
+
 	}
 
 	// Detaching node completely
 	node->next = NULL;
 	node->prev = NULL;
 }
+
+
+// METHOD : freeMemory()
+// DESCRIPTION: 
+//      This function frees all the memory allocated in the doublylinked list
+// PARAMETERS:
+//	   struct FlightNode* head: A pointer to the head of the list
+// RETURNS:
+//		None.
+void freeMemory(struct FlightNode* head) {
+
+	//Clearing the memory for FlightNode structs
+	struct FlightNode* currentNode = head;
+	//struct FlightInfo* currentInfo;
+	struct FlightNode* tempNode;
+
+	while (currentNode != NULL) {
+		tempNode = currentNode->next;
+		
+		// Clearing all allocated memory for the FlightInfo struct within the FlightNode
+		if (currentNode->info.destination != NULL) {
+			free(currentNode->info.destination);
+		}
+
+		if (currentNode->info.date != NULL) {
+			free(currentNode->info.date);
+		}
+
+		// freeing the current node
+		free(currentNode);
+
+		// Moving to the next node
+		currentNode = tempNode;
+	}
+}
+
