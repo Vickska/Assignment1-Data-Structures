@@ -3,7 +3,8 @@ FILE          : Assignment1.c
 PROJECT       : SENG1050 - A01 – SORTED DOUBLY-LINKED LISTS
 PROGRAMMER    : Vicky Nyangoma Kamanyire
 FIRST VERSION : 2026 - 10 - 05
-DESCRIPTION:  This program ...
+DESCRIPTION:  This program creates two doubly linked lists (sorted by fare and destination) to store flight information. 
+			  It also allows for editing of the flight fare for a specific flight.
 */
 
 #pragma warning (disable: 4996)
@@ -34,7 +35,7 @@ struct FlightNode* createFlightNode(struct FlightInfo flightInfo);
 struct FlightInfo getFlightInfo();
 void insertSortedFare(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** fareTail);
 void insertSortedDest(struct FlightNode** sortedHead, struct FlightNode* newNode, struct FlightNode** destTail);
-	struct FlightInfo getDestAndDate();
+struct FlightInfo getDestAndDate();
 struct FlightNode* findFlight(struct FlightNode* head, char* destination, char* date);
 float editFare(struct FlightNode* flightNode);
 void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail);
@@ -128,6 +129,7 @@ int main(void) {
 	// freeing all allocated memory for the linked lists
 	freeMemory(fareHead);
 	freeMemory(destHead);
+
 	return 0;
 }
 
@@ -527,10 +529,12 @@ float editFare(struct FlightNode* flightNode) {
 void deleteNode(struct FlightNode* node, struct FlightNode** head, struct FlightNode** tail) {
 
 	struct FlightNode* current = *head;
+	
+	// Creating a boolean variable to track if the node has been deleted
 	bool deleted = false;
 	
 
-	
+	// if the node to be deleted is NULL, the function returns withou doing anything.
 	if (node == NULL) {
 		return;
 	}
