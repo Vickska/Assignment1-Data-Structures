@@ -5,6 +5,8 @@ PROGRAMMER    : Vicky Nyangoma Kamanyire
 FIRST VERSION : 2026 - 10 - 05
 DESCRIPTION:  This program creates two doubly linked lists (sorted by fare and destination) to store flight information. 
 			  It also allows for editing of the flight fare for a specific flight.
+
+			  Link to Github repository: https://github.com/Vickska/Assignment1-Data-Structures.git
 */
 
 #pragma warning (disable: 4996)
